@@ -3,6 +3,8 @@ package com.example.CogniXProject;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @SpringBootTest
 class CogniXProjectApplicationTests {
 
@@ -19,4 +21,10 @@ class CogniXProjectApplicationTests {
 	void testCase12() {
 		System.out.println("The second test case ran successfully");
 	}
+
+	@Test
+	void testCase5() {
+		assertEquals(1,2);
+	}
+
 }
