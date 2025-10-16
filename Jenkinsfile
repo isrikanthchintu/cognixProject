@@ -1,9 +1,9 @@
 pipeline {
     agent any
-    options { skipDefaultCheckout() }  // disables automatic checkout
 
     environment {
-        APP_ENV = "production"
+        DOCKER_IMAGE = "cognix-app:${env.BUILD_NUMBER}"
+        DOCKER_HUB = "<your-dockerhub-username>/cognix-app"
     }
 
     stages {
@@ -15,21 +15,21 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build & Test Docker Image') {
             steps {
-                echo 'Building the application...'
-                sh './mvnw clean package'
+                echo "Building Docker image and running tests..."
+                sh "docker build -t $DOCKER_IMAGE ."
+                # Tests already run in Dockerfile via `mvn package` stage
             }
         }
 
-        stage('Test') {
+        stage('Push Docker Image') {
             steps {
-                echo 'Running unit tests...'
-                sh './mvnw test'
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
+                echo "Pushing Docker image to Docker Hub..."
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh "docker tag $DOCKER_IMAGE $DOCKER_HUB:${env.BUILD_NUMBER}"
+                    sh "docker push $DOCKER_HUB:${env.BUILD_NUMBER}"
                 }
             }
         }
@@ -37,10 +37,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Build and Tests completed successfully!'
+            echo '✅ Build, tests passed, Docker image pushed!'
         }
         failure {
-            echo '❌ Build or Tests failed. Check logs in Jenkins.'
+            echo '❌ Build or tests failed!'
         }
     }
 }
