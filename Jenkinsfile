@@ -7,14 +7,14 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                // Pull code from GitHub
-                git branch: 'main',
-                    url: 'https://github.com/isrikanthchintu/cognixProject.git',
-                    credentialsId: 'github-credentials'
-            }
-        }
+//         stage('Checkout') {
+//             steps {
+//                 // Pull code from GitHub
+//                 git branch: 'main',
+//                     url: 'https://github.com/isrikanthchintu/cognixProject.git',
+//                     credentialsId: 'github-credentials'
+//             }
+//         }
 
         stage('Build') {
             steps {
