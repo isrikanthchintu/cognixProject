@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class CogniXProjectApplication {
 
 	public static void main(String[] args) {
-		System.out.println("the project in jenkins  ");
+		System.out.println("the projec t in jenkins  ");
 		SpringApplication.run(CogniXProjectApplication.class, args);
 	}
 
