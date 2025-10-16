@@ -15,11 +15,11 @@ class CogniXProjectApplicationTests {
 
 	@Test
 	void testCase1() {
-		System.out.println("The first test case ran successfully");
+		System.out.println("The second test case ran successfully");
 	}
 	@Test
 	void testCase12() {
-		System.out.println("The second test case ran successfully");
+		System.out.println("The Third test case ran successfully");
 	}
 
 	@Test
