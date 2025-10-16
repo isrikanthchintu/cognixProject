@@ -2,39 +2,35 @@ pipeline {
     agent any
 
     environment {
-        APP_ENV = "production"
-        PATH = "/usr/local/bin:${env.PATH}" // Ensure docker is in PATH
+        PATH = "/usr/local/bin:${env.PATH}"
+        DOCKERHUB_REPO = 'yourdockerhubusername/cognix-app'
+        DOCKERHUB_CREDENTIALS = 'docker-hub-credentials'
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                echo "Checking out the code..."
                 git branch: 'main',
                     url: 'https://github.com/isrikanthchintu/cognixProject.git',
                     credentialsId: 'github-credentials'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Docker Image (includes tests)') {
             steps {
-                echo "Building Docker image..."
-                // Pull base images without credentials, build image
-                sh '/usr/local/bin/docker build --pull --no-cache -t cognix-app:latest .'
+                sh "/usr/local/bin/docker build -t ${DOCKERHUB_REPO}:latest ."
             }
         }
 
-        stage('Run Tests in Docker') {
-            steps {
-                echo "Running tests inside Docker container..."
-                // Run container, build & test inside, remove container after run
-                sh '/usr/local/bin/docker run --rm cognix-app:latest ./mvnw test'
+        stage('Push Docker Image') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
-            post {
-                always {
-                    // If Maven generates surefire reports, archive them
-                    junit '**/target/surefire-reports/*.xml'
+            steps {
+                withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '/usr/local/bin/docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                    sh "/usr/local/bin/docker push ${DOCKERHUB_REPO}:latest"
                 }
             }
         }
@@ -42,10 +38,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Build and tests completed successfully!"
+            echo "✅ Build, tests (inside Docker), and push completed successfully!"
         }
         failure {
-            echo "❌ Build or tests failed. Check logs!"
+            echo "❌ Pipeline failed. Check logs!"
         }
     }
 }
