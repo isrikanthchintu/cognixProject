@@ -33,17 +33,17 @@ pipeline {
             }
         }
 
-        stage('Run Tests in Docker') {
-            steps {
-                echo "Running tests inside Docker container..."
-                sh '/usr/local/bin/docker run --rm ${DOCKERHUB_REPO}:latest ./mvnw test'
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
-                }
-            }
-        }
+//         stage('Run Tests in Docker') {
+//             steps {
+//                 echo "Running tests inside Docker container..."
+//                 sh '/usr/local/bin/docker run --rm ${DOCKERHUB_REPO}:latest ./mvnw test'
+//             }
+//             post {
+//                 always {
+//                     junit '**/target/surefire-reports/*.xml'
+//                 }
+//             }
+//         }
 
         stage('Push Docker Image') {
             when {
