@@ -1,25 +1,23 @@
 pipeline {
     agent any
+    options { skipDefaultCheckout() }  // disables automatic checkout
 
     environment {
         APP_ENV = "production"
     }
 
     stages {
-
-//         stage('Checkout') {
-//             steps {
-//                 // Pull code from GitHub
-//                 git branch: 'main',
-//                     url: 'https://github.com/isrikanthchintu/cognixProject.git',
-//                     credentialsId: 'github-credentials'
-//             }
-//         }
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/isrikanthchintu/cognixProject.git',
+                    credentialsId: 'github-credentials'
+            }
+        }
 
         stage('Build') {
             steps {
                 echo 'Building the application...'
-                // Maven clean and package
                 sh './mvnw clean package'
             }
         }
@@ -27,12 +25,10 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running unit tests...'
-                // Maven test
                 sh './mvnw test'
             }
             post {
                 always {
-                    // Record test results
                     junit '**/target/surefire-reports/*.xml'
                 }
             }
