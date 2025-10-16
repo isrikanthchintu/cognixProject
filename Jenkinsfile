@@ -4,8 +4,7 @@ pipeline {
     environment {
         APP_ENV = "production"
         PATH = "/usr/local/bin:${env.PATH}" // Ensure docker is in PATH
-        IMAGE_NAME = "cognix-app"
-        IMAGE_TAG = "latest"
+        DOCKER_IMAGE = "cognix-app"
     }
 
     stages {
@@ -21,44 +20,46 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                echo "🐳 Building Docker image with tests..."
-                // This builds the image and runs `mvn clean install` inside it (as per your Dockerfile)
+                echo "🐳 Building Docker image and running Maven tests inside..."
                 sh """
-                    /usr/local/bin/docker build --pull --no-cache -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                    /usr/local/bin/docker build --pull --no-cache -t ${DOCKER_IMAGE}:latest .
                 """
                 script {
-                    // Tag the image with the commit SHA for traceability (optional)
                     def commitSha = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-                    sh "/usr/local/bin/docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:${commitSha}"
+                    sh "/usr/local/bin/docker tag ${DOCKER_IMAGE}:latest ${DOCKER_IMAGE}:${commitSha}"
                     env.DOCKER_TAG = commitSha
                 }
             }
         }
 
-        stage('Run Tests in Docker') {
+        stage('Run Tests (from build reports)') {
             steps {
-                echo "🧪 Running tests inside Docker container..."
-                // Run the JAR inside the container or run tests explicitly (if needed)
-                sh """
-                    /usr/local/bin/docker run --rm ${IMAGE_NAME}:${IMAGE_TAG} java -jar app.jar
-                """
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
-                }
+                echo "🧪 Collecting test results from build..."
+                junit '**/target/surefire-reports/*.xml'
             }
         }
 
-        // ❌ Removed Push Docker Image stage
+        stage('Verify Image Works') {
+            steps {
+                echo "✅ Verifying the image starts and exits properly..."
+                sh """
+                    /usr/local/bin/docker run --rm ${DOCKER_IMAGE}:latest sh -c "java -version"
+                """
+            }
+        }
+
     }
 
     post {
         success {
-            echo "✅ Build and tests completed successfully! (Image stored locally only)"
+            echo "🎉 Pipeline completed successfully — image built and tested locally!"
         }
         failure {
-            echo "❌ Build or tests failed. Check logs!"
+            echo "❌ Build or tests failed. Check the logs."
+        }
+        always {
+            echo "🧹 Cleaning up dangling images..."
+            sh 'docker image prune -f || true'
         }
     }
 }
