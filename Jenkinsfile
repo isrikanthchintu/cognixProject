@@ -18,30 +18,55 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build and Test with Maven') {
             steps {
-                echo "🐳 Building Docker image and running Maven tests inside..."
+                echo "🛠️ Running Maven build and tests..."
+                // Run the Maven build (this will fail the pipeline if build or tests fail)
+                sh 'mvn clean verify'
+            }
+
+            post {
+                always {
+                    echo "🧪 Publishing test results..."
+                    junit '**/target/surefire-reports/*.xml'
+                }
+                failure {
+                    echo "❌ Maven build or tests failed — skipping Docker image creation."
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            when {
+                expression {
+                    // Only run if previous stages succeeded
+                    currentBuild.result == null || currentBuild.result == 'SUCCESS'
+                }
+            }
+            steps {
+                echo "🐳 Building Docker image..."
                 sh """
                     /usr/local/bin/docker build --pull --no-cache -t ${DOCKER_IMAGE}:latest .
                 """
+
                 script {
                     def commitSha = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
                     sh "/usr/local/bin/docker tag ${DOCKER_IMAGE}:latest ${DOCKER_IMAGE}:${commitSha}"
                     env.DOCKER_TAG = commitSha
                 }
-            }
-        }
 
-        stage('Run Tests (from build reports)') {
-            steps {
-                echo "🧪 Collecting test results from build..."
-                junit '**/target/surefire-reports/*.xml'
+                echo "✅ Docker image built successfully with tag: ${env.DOCKER_TAG}"
             }
         }
 
         stage('Verify Image Works') {
+            when {
+                expression {
+                    currentBuild.result == null || currentBuild.result == 'SUCCESS'
+                }
+            }
             steps {
-                echo "✅ Verifying the image starts and exits properly..."
+                echo "🔍 Verifying Docker image..."
                 sh """
                     /usr/local/bin/docker run --rm ${DOCKER_IMAGE}:latest sh -c "java -version"
                 """
@@ -52,10 +77,10 @@ pipeline {
 
     post {
         success {
-            echo "🎉 Pipeline completed successfully — image built and tested locally!"
+            echo "🎉 Pipeline completed successfully — image built and verified!"
         }
         failure {
-            echo "❌ Build or tests failed. Check the logs."
+            echo "❌ Build or tests failed. Docker image was not created."
         }
         always {
             echo "🧹 Cleaning up dangling images..."
