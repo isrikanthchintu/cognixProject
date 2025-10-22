@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven_3_9_9' // The name you configured in Jenkins
+        maven 'Maven-Homebrew' // The name you configured in Jenkins
     }
 
     environment {
