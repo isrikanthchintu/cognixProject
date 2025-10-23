@@ -71,9 +71,8 @@ pipeline {
                 sh "docker run --rm ${DOCKER_IMAGE}:latest sh -c 'java -version'"
             }
         }
-    }
 
-    stage('Push Docker image to ECR') {
+        stage('Push Docker image to ECR') {
             steps {
                 echo "📤 Pushing image to ECR..."
                 sh """
@@ -82,6 +81,9 @@ pipeline {
                 """
             }
         }
+    }
+
+    
 
     post {
         success {
