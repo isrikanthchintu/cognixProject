@@ -17,7 +17,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo "📥 Checking out the code..."
+                echo "Checking out the code..."
                 git branch: 'main',
                     url: 'https://github.com/isrikanthchintu/cognixProject.git',
                     credentialsId: 'github-credentials'
@@ -32,11 +32,11 @@ pipeline {
 
             post {
                 always {
-                    echo "🧪 Publishing test results..."
+                    echo " Publishing test results..."
                     junit '**/target/surefire-reports/*.xml'
                 }
                 failure {
-                    echo "❌ Maven build or tests failed — skipping Docker image creation."
+                    echo " Maven build or tests failed — skipping Docker image creation."
                 }
             }
         }
@@ -48,7 +48,7 @@ pipeline {
                 }
             }
             steps {
-                echo "🐳 Building Docker image..."
+                echo "Building Docker image..."
                 sh """
                     docker build --pull --no-cache -t ${DOCKER_IMAGE}:latest .
                 """
@@ -59,7 +59,7 @@ pipeline {
                     env.DOCKER_TAG = commitSha
                 }
 
-                echo "✅ Docker image built successfully with tag: ${env.DOCKER_TAG}"
+                echo " Docker image built successfully with tag: ${env.DOCKER_TAG}"
             }
         }
 
@@ -70,14 +70,14 @@ pipeline {
                 }
             }
             steps {
-                echo "🔍 Verifying Docker image..."
+                echo " Verifying Docker image..."
                 sh "docker run --rm ${DOCKER_IMAGE}:latest sh -c 'java -version'"
             }
         }
 
         // stage('Push Docker image to ECR') {
         //     steps {
-        //         echo "📤 Pushing image to ECR..."
+        //         echo " Pushing image to ECR..."
         //         script {
         //             sh """
         //                 echo "🔹 Logging into AWS ECR..."
@@ -87,7 +87,7 @@ pipeline {
         //                 docker tag ${DOCKER_IMAGE}:${env.DOCKER_TAG} ${ECR_REPO}:${env.DOCKER_TAG}
         //                 docker tag ${DOCKER_IMAGE}:${env.DOCKER_TAG} ${ECR_REPO}:latest
         
-        //                 echo "🚀 Pushing image to ECR..."
+        //                 echo " Pushing image to ECR..."
         //                 docker push ${ECR_REPO}:${env.DOCKER_TAG}
         //                 docker push ${ECR_REPO}:latest
         //             """
