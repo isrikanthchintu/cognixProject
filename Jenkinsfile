@@ -73,6 +73,16 @@ pipeline {
         }
     }
 
+    stage('Push to ECR') {
+            steps {
+                echo "📤 Pushing image to ECR..."
+                sh """
+                    aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 463470986386.dkr.ecr.eu-north-1.amazonaws.com
+                    docker push ${DOCKER_IMAGE}:${env.DOCKER_TAG}
+                """
+            }
+        }
+
     post {
         success {
             echo "🎉 Pipeline completed successfully — image built and verified!"
