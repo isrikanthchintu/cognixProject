@@ -73,7 +73,7 @@ pipeline {
         }
     }
 
-    stage('Push to ECR') {
+    stage('Push Docker image to ECR') {
             steps {
                 echo "📤 Pushing image to ECR..."
                 sh """
