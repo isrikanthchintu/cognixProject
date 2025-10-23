@@ -78,20 +78,20 @@ pipeline {
         stage('Push Docker image to ECR') {
             steps {
                 echo "📤 Pushing image to ECR..."
-        script {
-            sh """
-                echo "🔹 Logging into AWS ECR..."
-                aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-
-                echo "🔹 Tagging image..."
-                docker tag ${DOCKER_IMAGE}:${env.DOCKER_TAG} ${ECR_REPO}:${env.DOCKER_TAG}
-                docker tag ${DOCKER_IMAGE}:${env.DOCKER_TAG} ${ECR_REPO}:latest
-
-                echo "🚀 Pushing image to ECR..."
-                docker push ${ECR_REPO}:${env.DOCKER_TAG}
-                docker push ${ECR_REPO}:latest
-            """
-        }
+                script {
+                    sh """
+                        echo "🔹 Logging into AWS ECR..."
+                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+        
+                        echo "🔹 Tagging image..."
+                        docker tag ${DOCKER_IMAGE}:${env.DOCKER_TAG} ${ECR_REPO}:${env.DOCKER_TAG}
+                        docker tag ${DOCKER_IMAGE}:${env.DOCKER_TAG} ${ECR_REPO}:latest
+        
+                        echo "🚀 Pushing image to ECR..."
+                        docker push ${ECR_REPO}:${env.DOCKER_TAG}
+                        docker push ${ECR_REPO}:latest
+                    """
+                }
             }
         }
     }
