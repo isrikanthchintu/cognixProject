@@ -9,6 +9,9 @@ pipeline {
         APP_ENV = "production"
         PATH = "/usr/local/bin:${env.PATH}"
         DOCKER_IMAGE = "cognix-app"
+        AWS_REGION = 'eu-north-1'
+        AWS_ACCOUNT_ID = '463470986386'
+        ECR_REPO = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${DOCKER_IMAGE}"
     }
 
     stages {
@@ -75,10 +78,20 @@ pipeline {
         stage('Push Docker image to ECR') {
             steps {
                 echo "📤 Pushing image to ECR..."
-                sh """
-                    aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 463470986386.dkr.ecr.eu-north-1.amazonaws.com
-                    docker push ${DOCKER_IMAGE}:${env.DOCKER_TAG}
-                """
+        script {
+            sh """
+                echo "🔹 Logging into AWS ECR..."
+                aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+
+                echo "🔹 Tagging image..."
+                docker tag ${DOCKER_IMAGE}:${env.DOCKER_TAG} ${ECR_REPO}:${env.DOCKER_TAG}
+                docker tag ${DOCKER_IMAGE}:${env.DOCKER_TAG} ${ECR_REPO}:latest
+
+                echo "🚀 Pushing image to ECR..."
+                docker push ${ECR_REPO}:${env.DOCKER_TAG}
+                docker push ${ECR_REPO}:latest
+            """
+        }
             }
         }
     }
